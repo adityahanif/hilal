@@ -110,7 +110,7 @@ body {
 
 .header {
     text-align: center;
-    margin-bottom: 1rem;
+    margin-bottom: 0.05rem;
 }
 
 .header h1 {
@@ -127,6 +127,15 @@ body {
 .header p {
     color: var(--text-muted);
     font-size: 1.1rem;
+}
+
+.current-date-display {
+    color: var(--secondary-color) !important;
+    font-size: 0.95rem !important;
+    font-weight: 500;
+    margin-top: 0.8rem;
+    opacity: 0.9;
+    letter-spacing: 0.5px;
 }
 
 .grid {

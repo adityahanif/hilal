@@ -1,4 +1,30 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // 0. Update Current Date Display (Masehi & Hijriah)
+    const updateTodayDate = () => {
+        const now = new Date();
+        const masehiFormatter = new Intl.DateTimeFormat('id-ID', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
+
+        // Use islamic-umalqura for a reliable Hijri calculation (standard Umm al-Qura)
+        const hijriFormatter = new Intl.DateTimeFormat('id-ID-u-ca-islamic-umalqura', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
+
+        const masehiDate = masehiFormatter.format(now);
+        const hijriDate = hijriFormatter.format(now);
+
+        const dateElement = document.getElementById('current-date-info');
+        if (dateElement) {
+            dateElement.textContent = `Hari ini: ${masehiDate} / ${hijriDate} (Kalender Ummul Qura)`;
+        }
+    };
+    updateTodayDate();
     // 1. Initialize Default Map (Jakarta)
     let defaultLat = -6.200000;
     let defaultLng = 106.816666;
@@ -271,17 +297,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const conjDateStr = formatDate(lastNewMoon.date);
                 const conjTimeStr = formatTime(lastNewMoon.date);
-                
+
                 let conjInfo = `🌑 Waktu konjungsi (ijtimak) terjadi pada tanggal ${conjDateStr} pukul ${conjTimeStr}`;
-                
+
                 if (nextNewMoon) {
                     const nextDateStr = formatDate(nextNewMoon.date);
                     const nextTimeStr = formatTime(nextNewMoon.date);
                     conjInfo += `, selanjutnya tanggal ${nextDateStr} pukul ${nextTimeStr}`;
                 }
-                
+
                 conjInfo += ` (Zona Waktu: ${currentTargetzone} UTC ${currentUtcOffset}).`;
-                
+
                 conjDisplay.textContent = conjInfo;
                 conjDisplay.style.display = "block";
                 conjDisplay.style.textAlign = "left";

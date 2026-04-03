@@ -26,8 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     updateTodayDate();
     // 1. Initialize Default Map (Jakarta)
-    let defaultLat = -6.200000;
-    let defaultLng = 106.816666;
+    let defaultLat = -6.175500;
+    let defaultLng = 106.827171;
 
     const map = L.map('map', {
         attributionControl: false

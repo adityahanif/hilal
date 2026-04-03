@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     currentUtcOffset = `${sign}${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
                 }
 
-                tzInfoElement.textContent = `[Zona Waktu: ${currentTargetzone} (${currentUtcOffset})]`;
+                tzInfoElement.textContent = `[Zona Waktu: ${currentTargetzone} (UTC ${currentUtcOffset})]`;
             } else {
                 throw new Error("Invalid response");
             }
@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const m = absMin % 60;
             currentUtcOffset = `${sign}${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
             currentTargetzone = tzName;
-            tzInfoElement.textContent = `[Zona Waktu: ${currentTargetzone} (${currentUtcOffset})]`;
+            tzInfoElement.textContent = `[Zona Waktu: ${currentTargetzone} (UTC ${currentUtcOffset})]`;
         }
     }
 
@@ -236,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 valSunset.innerHTML = sunsetText;
                 sunsetContainer.style.display = 'flex';
 
-                hijriDisplay.textContent = `Hasil perhitungan bulan pada tanggal ${formatDate(calcTime)} pukul ${sunsetText} (Zona Waktu: ${currentTargetzone}) di ${lastLocationName} adalah:`;
+                hijriDisplay.textContent = `Hasil perhitungan bulan pada tanggal ${formatDate(calcTime)} pukul ${sunsetText} (Zona Waktu: ${currentTargetzone} UTC ${currentUtcOffset}) di ${lastLocationName} adalah:`;
                 hijriDisplay.style.fontSize = "1rem";
                 hijriDisplay.style.textAlign = "left";
                 hijriDisplay.style.marginTop = "0";
@@ -245,7 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 calcTime = dateObj;
                 sunsetContainer.style.display = 'none';
 
-                hijriDisplay.textContent = `Hasil perhitungan bulan pada ${formatDate(calcTime)} pukul ${formatTime(calcTime)} (Zona Waktu: ${currentTargetzone}) pada ${lastLocationName} adalah:`;
+                hijriDisplay.textContent = `Hasil perhitungan bulan pada ${formatDate(calcTime)} pukul ${formatTime(calcTime)} (Zona Waktu: ${currentTargetzone} UTC ${currentUtcOffset}) pada ${lastLocationName} adalah:`;
                 hijriDisplay.style.fontSize = "1.1rem";
                 hijriDisplay.style.textAlign = "center";
                 hijriDisplay.style.marginTop = "0";
@@ -263,6 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const elongation = Astronomy.AngleBetween(sunGeo, moonGeo);
 
             const lastNewMoon = Astronomy.SearchMoonPhase(0, astroTime, -30);
+            const nextNewMoon = Astronomy.SearchMoonPhase(0, astroTime, 30);
             let ageHours = 0;
             if (lastNewMoon) {
                 const ageDays = astroTime.date.getTime() - lastNewMoon.date.getTime();
@@ -270,7 +271,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const conjDateStr = formatDate(lastNewMoon.date);
                 const conjTimeStr = formatTime(lastNewMoon.date);
-                conjDisplay.textContent = `🌑 Waktu konjungsi (ijtimak) terjadi pada tanggal ${conjDateStr} pukul ${conjTimeStr} (Waktu Lokal: ${currentTargetzone}).`;
+                
+                let conjInfo = `🌑 Waktu konjungsi (ijtimak) terjadi pada tanggal ${conjDateStr} pukul ${conjTimeStr}`;
+                
+                if (nextNewMoon) {
+                    const nextDateStr = formatDate(nextNewMoon.date);
+                    const nextTimeStr = formatTime(nextNewMoon.date);
+                    conjInfo += `, selanjutnya tanggal ${nextDateStr} pukul ${nextTimeStr}`;
+                }
+                
+                conjInfo += ` (Zona Waktu: ${currentTargetzone} UTC ${currentUtcOffset}).`;
+                
+                conjDisplay.textContent = conjInfo;
                 conjDisplay.style.display = "block";
                 conjDisplay.style.textAlign = "left";
             } else {

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediksi Hilal</title>
+    <meta name="referrer" content="no-referrer-when-downgrade">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+
+    <!-- Leaflet Control Geocoder (Search Box) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" href="favicon.png">
+</head>
+
+<body>
+    <div class="background-animation"></div>
+
+    <main class="container">
+        <header class="header">
+            <h1>Prediksi<span class="highlight">Hilal</span></h1>
+            <p>Perhitungan Tinggi Bulan, Elongasi, dan Umur Hilal Akurat</p>
+        </header>
+
+        <div class="grid">
+            <!-- Left Panel: Inputs and Map -->
+            <section class="panel input-panel">
+                <div class="card">
+                    <h2>Waktu & Lokasi Pengamatan</h2>
+                    <form id="calc-form">
+                        <div class="form-group">
+                            <label for="date-input">Waktu Pengamatan (Waktu Lokal)</label>
+                            <input type="text" id="date-input" placeholder="02/04/2026 18:00" required>
+                        </div>
+
+                        <div class="map-container">
+                            <label>Pilih Lokasi pada Peta</label>
+                            <div id="map"></div>
+                        </div>
+
+                        <div class="coordinates-grid">
+                            <div class="form-group">
+                                <label for="lat-input">Latitude (Lintang)</label>
+                                <input type="number" id="lat-input" step="any" placeholder="-6.200000" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="lng-input">Longitude (Bujur)</label>
+                                <input type="number" id="lng-input" step="any" placeholder="106.816666" required>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-calculate">Hitung Ketinggian Bulan</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Right Panel: Results -->
+            <section class="panel result-panel">
+                <div class="card glass-card">
+                    <h2>Hasil Perhitungan</h2>
+                    <p id="hijri-display" class="hijri-text">--</p>
+
+                    <div class="result-grid">
+                        <div class="result-item">
+                            <span class="icon">📐</span>
+                            <span class="label">Ketinggian Bulan (Altitude)</span>
+                            <span class="value" id="val-altitude">--°</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="icon">✨</span>
+                            <span class="label">Derajat Elongasi</span>
+                            <span class="value" id="val-elongation">--°</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="icon">⏳</span>
+                            <span class="label">Umur Bulan (Sejak Konjungsi)</span>
+                            <span class="value" id="val-age">-- Jam</span>
+                        </div>
+                        <div class="result-item" style="display: none;" id="sunset-time-container">
+                            <span class="icon">🌅</span>
+                            <span class="label">Waktu Terbenam Matahari (WIB atau UTC +7) </span>
+                            <span class="value" id="val-sunset">--:--</span>
+                        </div>
+                    </div>
+
+                    <p id="conjunction-display"
+                        style="display: none; margin-top: 1rem; color: var(--secondary-color); font-size: 0.95rem;"></p>
+
+                    <div class="criteria-box">
+                        <h3>Referensi Kriteria Visibilitas</h3>
+                        <div class="criteria-item" id="crit-mabims">
+                            <div class="crit-header">
+                                <strong>MABIMS (Baru)</strong>
+                                <span class="status-badge" id="badge-mabims">Menunggu...</span>
+                            </div>
+                            <p>Syarat: Elevasi > 3° dan Elongasi > 6.4°</p>
+                        </div>
+                        <div class="criteria-item" id="crit-wujudul">
+                            <div class="crit-header">
+                                <strong>Wujudul Hilal</strong>
+                                <span class="status-badge" id="badge-wujudul">Menunggu...</span>
+                            </div>
+                            <p>Syarat: Konjungsi terjadi sebelum ghurub (Matahari terbenam) & Bulan berada di atas
+                                horizon (Elevasi > 0°) saat ghurub.</p>
+                        </div>
+                        <p class="note"><em>* Hasil di atas dihitung secara astronomik murni pada waktu yang Anda
+                                berikan. Untuk kriteria di atas, pastikan mengatur waktu pengamatan pada saat "Matahari
+                                Terbenam" setempat.</em></p>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <footer class="footer-credit">
+            Made by Aditya Hanif &copy; 2026
+        </footer>
+    </main>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/id.js"></script>    <!-- Leaflet Control Geocoder (Search Box) -->
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    <!-- Astronomy Engine JS (Offline Local Copy) -->
+    <script src="astronomy.browser.min.js"></script>
+    <!-- Main Script -->
+    <script src="script.js"></script>
+</body>
+
+</html>

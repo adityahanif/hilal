@@ -22,6 +22,61 @@ document.addEventListener('DOMContentLoaded', () => {
     let marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
 
     let lastLocationName = "Jakarta, Indonesia"; // Default
+    let currentTargetzone = "Asia/Jakarta"; // Default TZ Name
+    let currentUtcOffset = "+07:00"; // Default (WIB)
+    const tzInfoElement = document.getElementById('tz-info');
+
+    async function updateTimezone(lat, lng) {
+        if (!tzInfoElement) return;
+        tzInfoElement.textContent = "[Zona Waktu: Mendeteksi...]";
+        try {
+            // timeapi.io is a reliable public API for this
+            const response = await fetch(`https://www.timeapi.io/api/TimeZone/coordinate?latitude=${lat}&longitude=${lng}`);
+            const data = await response.json();
+            if (data && data.timeZone) {
+                currentTargetzone = data.timeZone;
+                // API returns currentUtcOffset as an object with 'seconds'
+                const offsetData = data.currentUtcOffset;
+                let offsetSeconds = 0;
+                if (typeof offsetData === 'object' && offsetData !== null) {
+                    offsetSeconds = offsetData.seconds || 0;
+                } else if (typeof offsetData === 'string') {
+                    // Fallback
+                    currentUtcOffset = offsetData;
+                } else {
+                    offsetSeconds = 0;
+                }
+
+                if (typeof offsetData !== 'string') {
+                    const sign = offsetSeconds >= 0 ? "+" : "-";
+                    const absSec = Math.abs(offsetSeconds);
+                    const h = Math.floor(absSec / 3600);
+                    const m = Math.floor((absSec % 3600) / 60);
+                    currentUtcOffset = `${sign}${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+                }
+
+                tzInfoElement.textContent = `[Zona Waktu: ${currentTargetzone} (${currentUtcOffset})]`;
+            } else {
+                throw new Error("Invalid response");
+            }
+        } catch (error) {
+            console.warn("Timezone detection failed, falling back to local:", error);
+            // Default behavior if API fails: use typical browser local timezone info
+            const localDate = new Date();
+            const tzName = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            const offsetTotalMin = -localDate.getTimezoneOffset(); // e.g. 330 for +5:30
+            const sign = offsetTotalMin >= 0 ? "+" : "-";
+            const absMin = Math.abs(offsetTotalMin);
+            const h = Math.floor(absMin / 60);
+            const m = absMin % 60;
+            currentUtcOffset = `${sign}${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+            currentTargetzone = tzName;
+            tzInfoElement.textContent = `[Zona Waktu: ${currentTargetzone} (${currentUtcOffset})]`;
+        }
+    }
+
+    // Initial check for Jakarta
+    updateTimezone(defaultLat, defaultLng);
 
     // 2. Add Search Box (Geocoder)
     const geocoder = L.Control.geocoder({
@@ -36,6 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
             map.setView(latlng, 13);
             inputLat.value = latlng.lat.toFixed(6);
             inputLng.value = latlng.lng.toFixed(6);
+            updateTimezone(latlng.lat, latlng.lng);
         })
         .addTo(map);
 
@@ -51,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
         locale: "id", // Use Indonesian locale
         defaultDate: new Date(),
         allowInput: true, // Let users type manually
-        disableMobile: "true" // Force Flatpickr UI on mobile to keep keyboard accessible
+        disableMobile: true // Force Flatpickr UI on mobile to keep keyboard accessible
     });
 
     inputLat.value = defaultLat.toFixed(6);
@@ -63,6 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
         inputLat.value = coord.lat.toFixed(6);
         inputLng.value = coord.lng.toFixed(6);
         lastLocationName = `Titik Koordinat (${coord.lat.toFixed(4)}, ${coord.lng.toFixed(4)})`;
+        updateTimezone(coord.lat, coord.lng);
     });
 
     // Update map when map is clicked
@@ -71,6 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
         inputLat.value = e.latlng.lat.toFixed(6);
         inputLng.value = e.latlng.lng.toFixed(6);
         lastLocationName = `Titik Koordinat (${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)})`;
+        updateTimezone(e.latlng.lat, e.latlng.lng);
     });
 
     // Update map when inputs change
@@ -128,70 +186,66 @@ document.addEventListener('DOMContentLoaded', () => {
         const rawDateStr = document.getElementById('date-input').value;
         let dateObj = fp.parseDate(rawDateStr, "d/m/Y H:i");
 
-        // Fallback to selectedDates if parsing failed (though usually parseDate is what we want)
-        if (!dateObj) {
-            dateObj = fp.selectedDates[0];
-        } else {
-            // Sync the picker to the parsed date so they stay aligned
-            fp.setDate(dateObj, false);
-        }
-
         if (isNaN(lat) || isNaN(lng) || !dateObj) {
             alert("Harap isi koordinat dan waktu dengan benar! (Format: dd/mm/yyyy HH:mm)");
             return;
         }
 
+        // --- TIMEZONE ADJUSTMENT FOR INPUT ---
+        // Treat input date/time as being in currentTargetzone
+        const isoString = `${dateObj.getFullYear()}-${(dateObj.getMonth() + 1).toString().padStart(2, '0')}-${dateObj.getDate().toString().padStart(2, '0')}T${dateObj.getHours().toString().padStart(2, '0')}:${dateObj.getMinutes().toString().padStart(2, '0')}:00`;
+        // Append currentUtcOffset (e.g., "+03:00")
+        const dateObjInTarget = new Date(`${isoString}${currentUtcOffset}`);
+
+        if (!isNaN(dateObjInTarget.getTime())) {
+            dateObj = dateObjInTarget;
+        }
+
         try {
-            // Check if library is loaded correctly
             if (typeof Astronomy === 'undefined') {
-                throw new Error("Library Astronomy Engine tidak dapat dimuat. Pastikan Anda memiliki koneksi internet untuk memuat script dari CDN.");
+                throw new Error("Library Astronomy Engine tidak dapat dimuat.");
             }
 
-            const observer = new Astronomy.Observer(lat, lng, 0); // elevation 0m
+            const observer = new Astronomy.Observer(lat, lng, 0);
 
-            // First, find sunset for the given date and location
-            // Search from start of day to ensure we catch today's sunset
+            // Find sunset for the given date and location
             let startOfDay = new Date(dateObj);
             startOfDay.setHours(0, 0, 0, 0);
+            // Note: startOfDay here is in local user time, but we just need a starting point for SearchRiseSet
             let timeSearchStart = Astronomy.MakeTime(startOfDay);
 
-            // -1 represents Sunset
             let sunsetEvent = Astronomy.SearchRiseSet('Sun', observer, -1, timeSearchStart, 2);
 
             let calcTime;
             let sunsetText = "--:--";
 
+            // Formatters for target timezone
+            const formatTime = (d) => new Intl.DateTimeFormat('id-ID', {
+                timeZone: currentTargetzone,
+                hour: '2-digit', minute: '2-digit', hour12: false
+            }).format(d);
+
+            const formatDate = (d) => new Intl.DateTimeFormat('id-ID', {
+                timeZone: currentTargetzone,
+                day: 'numeric', month: 'long', year: 'numeric'
+            }).format(d);
+
             if (sunsetEvent) {
                 calcTime = sunsetEvent.date;
-                let h = calcTime.getHours().toString().padStart(2, '0');
-                let m = calcTime.getMinutes().toString().padStart(2, '0');
-                sunsetText = `${h}:${m}`;
+                sunsetText = formatTime(calcTime);
                 valSunset.innerHTML = sunsetText;
                 sunsetContainer.style.display = 'flex';
 
-                // Update display with requested summary text
-                const dateOptions = { day: 'numeric', month: 'long', year: 'numeric' };
-                const timeOptions = { hour: '2-digit', minute: '2-digit' };
-
-                const tanggalStr = calcTime.toLocaleDateString('id-ID', dateOptions);
-                const waktuStr = calcTime.toLocaleTimeString('id-ID', timeOptions);
-
-                hijriDisplay.textContent = `Hasil perhitungan bulan pada tanggal ${tanggalStr} pukul ${waktuStr} WIB (UTC +7) di ${lastLocationName} adalah:`;
-                hijriDisplay.style.fontSize = "1rem"; // Keep it legible
-                hijriDisplay.style.textAlign = "left"; // 
+                hijriDisplay.textContent = `Hasil perhitungan bulan pada tanggal ${formatDate(calcTime)} pukul ${sunsetText} (Zona Waktu: ${currentTargetzone}) di ${lastLocationName} adalah:`;
+                hijriDisplay.style.fontSize = "1rem";
+                hijriDisplay.style.textAlign = "left";
                 hijriDisplay.style.marginTop = "0";
                 hijriDisplay.style.color = "var(--secondary-color)";
             } else {
-                // Extremes like poles, fallback to user inputted time
                 calcTime = dateObj;
                 sunsetContainer.style.display = 'none';
 
-                const dateOptions = { day: 'numeric', month: 'long', year: 'numeric' };
-                const timeOptions = { hour: '2-digit', minute: '2-digit' };
-                const tanggalStr = calcTime.toLocaleDateString('id-ID', dateOptions);
-                const waktuStr = calcTime.toLocaleTimeString('id-ID', timeOptions);
-
-                hijriDisplay.textContent = `Hasil perhitungan bulan pada ${tanggalStr} pukul ${waktuStr} pada ${lastLocationName} adalah:`;
+                hijriDisplay.textContent = `Hasil perhitungan bulan pada ${formatDate(calcTime)} pukul ${formatTime(calcTime)} (Zona Waktu: ${currentTargetzone}) pada ${lastLocationName} adalah:`;
                 hijriDisplay.style.fontSize = "1.1rem";
                 hijriDisplay.style.textAlign = "center";
                 hijriDisplay.style.marginTop = "0";
@@ -200,43 +254,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const astroTime = Astronomy.MakeTime(calcTime);
 
-            // 1. Calculate Altitude (Topocentric)
             const moonEqu = Astronomy.Equator('Moon', astroTime, observer, true, true);
             const moonHor = Astronomy.Horizon(astroTime, observer, moonEqu.ra, moonEqu.dec, 'normal');
             const altitude = moonHor.altitude;
 
-            // 2. Calculate Elongation (Geocentric Angular Distance is standard for MABIMS)
             const moonGeo = Astronomy.GeoVector('Moon', astroTime, true);
             const sunGeo = Astronomy.GeoVector('Sun', astroTime, true);
             const elongation = Astronomy.AngleBetween(sunGeo, moonGeo);
 
-            // 3. Moon Age (Umur Hilal in Hours - Exact)
-            // Search backwards for the New Moon event (Phase 0) within the last 30 days
             const lastNewMoon = Astronomy.SearchMoonPhase(0, astroTime, -30);
             let ageHours = 0;
             if (lastNewMoon) {
                 const ageDays = astroTime.date.getTime() - lastNewMoon.date.getTime();
                 ageHours = ageDays / (1000 * 60 * 60);
 
-                const conjDateStr = lastNewMoon.date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-                const conjTimeStr = lastNewMoon.date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-                conjDisplay.textContent = `🌑 Waktu konjungsi (ijtimak) terjadi pada tanggal ${conjDateStr} pukul ${conjTimeStr} WIB (UTC +7).`;
+                const conjDateStr = formatDate(lastNewMoon.date);
+                const conjTimeStr = formatTime(lastNewMoon.date);
+                conjDisplay.textContent = `🌑 Waktu konjungsi (ijtimak) terjadi pada tanggal ${conjDateStr} pukul ${conjTimeStr} (Waktu Lokal: ${currentTargetzone}).`;
                 conjDisplay.style.display = "block";
                 conjDisplay.style.textAlign = "left";
             } else {
                 conjDisplay.style.display = "none";
             }
 
-            // Animate Outputs
             animateValue(valAlt, 0, altitude, 1000, val => Math.abs(val) < 0.01 && val < 0 ? `-0.00°` : `${val.toFixed(2)}°`);
             animateValue(valElong, 0, elongation, 1000, val => `${val.toFixed(2)}°`);
             animateValue(valAge, 0, ageHours, 1000, val => `${val.toFixed(2)} Jam`);
 
-            // Check Criteria
             let meetMabims = (altitude >= 3.0 && elongation >= 6.4);
             let meetWujudul = (ageHours > 0 && altitude > 0);
 
-            // Update Badges UI
             if (meetMabims) {
                 badgeMabims.className = 'status-badge meet';
                 badgeMabims.textContent = 'Memenuhi Syarat';

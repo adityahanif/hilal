@@ -162,9 +162,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 2. Initialize Flatpickr for Date/Time Input
     const fp = flatpickr("#date-input", {
-        enableTime: true,
-        dateFormat: "d/m/Y H:i", // dd/mm/yyyy 24 hour format
-        time_24hr: true,
+        enableTime: false, // jam otomatis = waktu maghrib di lokasi terpilih
+        dateFormat: "d/m/Y", // dd/mm/yyyy
         locale: "id", // Use Indonesian locale
         defaultDate: new Date(),
         allowInput: true, // Let users type manually
@@ -245,10 +244,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Priority: try parsing the current raw input value first to capture manual typing
         const rawDateStr = document.getElementById('date-input').value;
-        let dateObj = fp.parseDate(rawDateStr, "d/m/Y H:i");
+        let dateObj = fp.parseDate(rawDateStr, "d/m/Y");
 
         if (isNaN(lat) || isNaN(lng) || !dateObj) {
-            alert("Harap isi koordinat dan waktu dengan benar! (Format: dd/mm/yyyy HH:mm)");
+            alert("Harap isi koordinat dan tanggal dengan benar! (Format: dd/mm/yyyy)");
             return;
         }
 
@@ -269,11 +268,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const observer = new Astronomy.Observer(lat, lng, 0);
 
-            // Find sunset for the given date and location
-            let startOfDay = new Date(dateObj);
-            startOfDay.setHours(0, 0, 0, 0);
-            // Note: startOfDay here is in local user time, but we just need a starting point for SearchRiseSet
-            let timeSearchStart = Astronomy.MakeTime(startOfDay);
+            // Jam perhitungan otomatis = maghrib di tanggal & lokasi terpilih.
+            // dateObj (setelah penyesuaian zona waktu di atas) sudah tepat
+            // tengah malam tanggal terpilih di zona target.
+            let timeSearchStart = Astronomy.MakeTime(dateObj);
 
             let sunsetEvent = Astronomy.SearchRiseSet('Sun', observer, -1, timeSearchStart, 2);
 

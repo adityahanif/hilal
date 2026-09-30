@@ -25,7 +25,7 @@ Aplikasi web modern dan elegan untuk menghitung prediksi penampakan hilal (bulan
 
 1. Kloning atau unduh repositori ini.
 2. Buka file `index.html` pada browser favorit Anda.
-3. Masukkan tanggal pengamatan.
+3. Masukkan tanggal pengamatan — jam perhitungan otomatis memakai waktu matahari terbenam (maghrib) di lokasi terpilih pada tanggal itu.
 4. Pilih lokasi di peta atau cari melalui kolom pencarian.
 5. Klik **"Hitung Ketinggian Bulan"**.
 6. Sistem akan menampilkan hasil perhitungan tepat pada saat matahari terbenam di hari tersebut.

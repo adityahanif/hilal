@@ -17,7 +17,7 @@ Aplikasi web modern dan elegan untuk menghitung prediksi penampakan hilal (bulan
 
 - **Struktur & Logika**: HTML5, Vanilla CSS3 (Custom Design System), dan JavaScript (ES6+).
 - **Astronomy Logic**: [Astronomy Engine](https://github.com/cosinekitty/astronomypy) (Versi Browser) untuk efemeris benda langit.
-- **Maps API**: [Leaflet.js](https://leafletjs.com/) dengan tiles dari CartoDB.
+- **Maps API**: [Leaflet.js](https://leafletjs.com/) dengan tiles dari Esri World Topo Map (fallback Esri World Street Map).
 - **UI Components**: [Flatpickr](https://flatpickr.js.org/) untuk pemilihan tanggal/waktu dan [Leaflet Control Geocoder](https://github.com/perliedman/leaflet-control-geocoder).
 - **Typography**: Google Fonts (Outfit).
 

@@ -29,16 +29,43 @@ document.addEventListener('DOMContentLoaded', () => {
     let defaultLat = -6.175500;
     let defaultLng = 106.827171;
 
+    // Fail fast with a visible message if Leaflet CDN failed (offline/adblock/file:// block)
+    if (typeof L === 'undefined') {
+        const mapEl = document.getElementById('map');
+        if (mapEl) {
+            mapEl.innerHTML = '<div style="padding:1.5rem;color:#f0f4f8;font-size:0.9rem;line-height:1.5">Peta gagal dimuat: library Leaflet (CDN) tidak tersedia.<br>Cek koneksi internet / nonaktifkan AdBlock, lalu hard-refresh (Ctrl+Shift+R).<br>Lihat Console (F12) untuk detail error.</div>';
+        }
+        console.error("Leaflet 'L' is undefined. CDN blocked or offline.");
+        return;
+    }
+
     const map = L.map('map', {
         attributionControl: false
     }).setView([defaultLat, defaultLng], 5);
 
-    // Using CartoDB Positron tiles for a 'regular' light appearance while avoiding OSM's strict Referer policy
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd',
-        maxZoom: 20
-    }).addTo(map);
+    // Esri World Topo primary (same as Galura) + Esri Street fallback.
+    // NOTE: do NOT use tile.openstreetmap.org directly (osm.wiki/Blocked) or
+    // basemaps.cartocdn.com (now requires API key watermark).
+    const topoTiles = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri',
+        maxZoom: 19
+    });
+    const streetFallback = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri',
+        maxZoom: 19
+    });
+    topoTiles.on('tileerror', () => {
+        console.warn("Topo tiles error, falling back to Street.");
+        if (!map.hasLayer(streetFallback)) {
+            map.removeLayer(topoTiles);
+            streetFallback.addTo(map);
+        }
+    });
+    topoTiles.addTo(map);
+
+    // Leaflet needs correct container size after CSS loads / layout settles
+    setTimeout(() => map.invalidateSize(), 200);
+    window.addEventListener('load', () => map.invalidateSize());
 
     L.control.attribution({
         position: 'bottomright',
@@ -104,26 +131,34 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initial check for Jakarta
     updateTimezone(defaultLat, defaultLng);
 
-    // 2. Add Search Box (Geocoder)
-    const geocoder = L.Control.geocoder({
-        defaultMarkGeocode: false,
-        placeholder: "Cari kota atau lokasi...",
-        errorMessage: "Lokasi tidak ditemukan."
-    })
-        .on('markgeocode', function (e) {
-            const latlng = e.geocode.center;
-            lastLocationName = e.geocode.name; // Capture location name
-            marker.setLatLng(latlng);
-            map.setView(latlng, 13);
-            inputLat.value = latlng.lat.toFixed(6);
-            inputLng.value = latlng.lng.toFixed(6);
-            updateTimezone(latlng.lat, latlng.lng);
-        })
-        .addTo(map);
-
-    // Sync input with Map
+    // Sync input with Map (defined before geocoder so the callback can use them)
     const inputLat = document.getElementById('lat-input');
     const inputLng = document.getElementById('lng-input');
+
+    // 2. Add Search Box (Geocoder) - optional, must never kill the map/form if CDN fails
+    try {
+        if (L.Control && typeof L.Control.geocoder === 'function') {
+            L.Control.geocoder({
+                defaultMarkGeocode: false,
+                placeholder: "Cari kota atau lokasi...",
+                errorMessage: "Lokasi tidak ditemukan."
+            })
+                .on('markgeocode', function (e) {
+                    const latlng = e.geocode.center;
+                    lastLocationName = e.geocode.name; // Capture location name
+                    marker.setLatLng(latlng);
+                    map.setView(latlng, 13);
+                    inputLat.value = latlng.lat.toFixed(6);
+                    inputLng.value = latlng.lng.toFixed(6);
+                    updateTimezone(latlng.lat, latlng.lng);
+                })
+                .addTo(map);
+        } else {
+            console.warn("Geocoder plugin not loaded, search box disabled.");
+        }
+    } catch (geoErr) {
+        console.warn("Geocoder init failed, continuing without search:", geoErr);
+    }
 
     // 2. Initialize Flatpickr for Date/Time Input
     const fp = flatpickr("#date-input", {

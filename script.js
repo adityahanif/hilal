@@ -337,14 +337,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     const nextDateStr = formatDate(nextNewMoon.date);
                     const nextTimeStr = formatTime(nextNewMoon.date);
                     conjInfo += `, selanjutnya tanggal ${nextDateStr} pukul ${nextTimeStr}`;
-
-                    // Sunset pertama SETELAH konjungsi berikutnya: kalau konjungsi
-                    // terjadi sebelum maghrib, ini maghrib di tanggal yang sama;
-                    // kalau sesudah maghrib, otomatis maghrib hari berikutnya.
-                    const nextSunset = Astronomy.SearchRiseSet('Sun', observer, -1, nextNewMoon, 2);
-                    if (nextSunset) {
-                        conjInfo += ` dengan waktu terbenam matahari pukul ${formatTime(nextSunset.date)}`;
-                    }
                 }
 
                 conjInfo += ` (Zona Waktu: ${currentTargetzone} UTC ${currentUtcOffset}).`;

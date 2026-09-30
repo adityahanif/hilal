@@ -30,6 +30,10 @@ Aplikasi web modern dan elegan untuk menghitung prediksi penampakan hilal (bulan
 5. Klik **"Hitung Ketinggian Bulan"**.
 6. Sistem akan menampilkan hasil perhitungan tepat pada saat matahari terbenam di hari tersebut.
 
+## 🧑‍💻 Pengembangan
+
+`index.html` memuat `style.css` dan `script.js` dengan query versi (`?v=2`). Naikkan versinya setiap kali salah satu file itu diubah agar browser tidak memakai salinan lama dari cache (penting untuk deployment di GitHub Pages). File dari CDN tidak perlu, karena versinya sudah dipin di URL.
+
 ## 📝 Lisensi & Kredit
 
 Dibuat dengan ❤️ oleh **Aditya Hanif** &copy; 2026.

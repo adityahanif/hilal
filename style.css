@@ -421,13 +421,11 @@ input:focus {
 }
 
 .result-item .value {
-    font-size: 1.25rem;
+    font-size: 1.45rem;
     font-weight: 700;
     letter-spacing: -0.3px;
-    background: var(--accent-grad);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: var(--secondary-color);
+    font-variant-numeric: tabular-nums;
 }
 
 /* Criteria Section */

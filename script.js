@@ -128,6 +128,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Initial check for Jakarta
+    updateTimezone(defaultLat, defaultLng);
+
     // Sync input with Map (defined before geocoder so the callback can use them)
     const inputLat = document.getElementById('lat-input');
     const inputLng = document.getElementById('lng-input');
@@ -147,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     map.setView(latlng, 13);
                     inputLat.value = latlng.lat.toFixed(6);
                     inputLng.value = latlng.lng.toFixed(6);
-                    updateTimezone(latlng.lat, latlng.lng).then(runCalculation);
+                    updateTimezone(latlng.lat, latlng.lng);
                 })
                 .addTo(map);
         } else {
@@ -156,6 +159,17 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (geoErr) {
         console.warn("Geocoder init failed, continuing without search:", geoErr);
     }
+
+    // 2. Initialize Flatpickr for Date/Time Input
+    const fp = flatpickr("#date-input", {
+        enableTime: true,
+        dateFormat: "d/m/Y H:i", // dd/mm/yyyy 24 hour format
+        time_24hr: true,
+        locale: "id", // Use Indonesian locale
+        defaultDate: new Date(),
+        allowInput: true, // Let users type manually
+        disableMobile: true // Force Flatpickr UI on mobile to keep keyboard accessible
+    });
 
     inputLat.value = defaultLat.toFixed(6);
     inputLng.value = defaultLng.toFixed(6);
@@ -166,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
         inputLat.value = coord.lat.toFixed(6);
         inputLng.value = coord.lng.toFixed(6);
         lastLocationName = `Titik Koordinat (${coord.lat.toFixed(4)}, ${coord.lng.toFixed(4)})`;
-        updateTimezone(coord.lat, coord.lng).then(runCalculation);
+        updateTimezone(coord.lat, coord.lng);
     });
 
     // Update map when map is clicked
@@ -175,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
         inputLat.value = e.latlng.lat.toFixed(6);
         inputLng.value = e.latlng.lng.toFixed(6);
         lastLocationName = `Titik Koordinat (${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)})`;
-        updateTimezone(e.latlng.lat, e.latlng.lng).then(runCalculation);
+        updateTimezone(e.latlng.lat, e.latlng.lng);
     });
 
     // Update map when inputs change
@@ -187,7 +201,6 @@ document.addEventListener('DOMContentLoaded', () => {
             marker.setLatLng(latlng);
             map.flyTo(latlng, 8);
             lastLocationName = `Titik Koordinat (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
-            updateTimezone(lat, lng).then(runCalculation);
         }
     };
     inputLat.addEventListener('change', updateMapFromInput);
@@ -224,13 +237,29 @@ document.addEventListener('DOMContentLoaded', () => {
         window.requestAnimationFrame(step);
     }
 
-    const runCalculation = () => {
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+
         const lat = parseFloat(inputLat.value);
         const lng = parseFloat(inputLng.value);
 
-        if (isNaN(lat) || isNaN(lng)) {
-            alert("Harap isi koordinat dengan benar!");
+        // Priority: try parsing the current raw input value first to capture manual typing
+        const rawDateStr = document.getElementById('date-input').value;
+        let dateObj = fp.parseDate(rawDateStr, "d/m/Y H:i");
+
+        if (isNaN(lat) || isNaN(lng) || !dateObj) {
+            alert("Harap isi koordinat dan waktu dengan benar! (Format: dd/mm/yyyy HH:mm)");
             return;
+        }
+
+        // --- TIMEZONE ADJUSTMENT FOR INPUT ---
+        // Treat input date/time as being in currentTargetzone
+        const isoString = `${dateObj.getFullYear()}-${(dateObj.getMonth() + 1).toString().padStart(2, '0')}-${dateObj.getDate().toString().padStart(2, '0')}T${dateObj.getHours().toString().padStart(2, '0')}:${dateObj.getMinutes().toString().padStart(2, '0')}:00`;
+        // Append currentUtcOffset (e.g., "+03:00")
+        const dateObjInTarget = new Date(`${isoString}${currentUtcOffset}`);
+
+        if (!isNaN(dateObjInTarget.getTime())) {
+            dateObj = dateObjInTarget;
         }
 
         try {
@@ -240,13 +269,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const observer = new Astronomy.Observer(lat, lng, 0);
 
-            // "Hari ini" menurut zona waktu lokasi terpilih: mulai pencarian
-            // maghrib dari tengah malam tanggal hari ini di zona tersebut.
-            const [offH, offM] = currentUtcOffset.split(':').map(Number);
-            const offMin = (currentUtcOffset.startsWith('-') ? -1 : 1) * (Math.abs(offH) * 60 + offM);
-            const wallNow = new Date(Date.now() + offMin * 60000);
-            const startOfDayMs = Date.UTC(wallNow.getUTCFullYear(), wallNow.getUTCMonth(), wallNow.getUTCDate()) - offMin * 60000;
-            let timeSearchStart = Astronomy.MakeTime(new Date(startOfDayMs));
+            // Find sunset for the given date and location
+            let startOfDay = new Date(dateObj);
+            startOfDay.setHours(0, 0, 0, 0);
+            // Note: startOfDay here is in local user time, but we just need a starting point for SearchRiseSet
+            let timeSearchStart = Astronomy.MakeTime(startOfDay);
 
             let sunsetEvent = Astronomy.SearchRiseSet('Sun', observer, -1, timeSearchStart, 2);
 
@@ -276,7 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 hijriDisplay.style.marginTop = "0";
                 hijriDisplay.style.color = "var(--secondary-color)";
             } else {
-                calcTime = new Date();
+                calcTime = dateObj;
                 sunsetContainer.style.display = 'none';
 
                 hijriDisplay.textContent = `Hasil perhitungan bulan pada ${formatDate(calcTime)} pukul ${formatTime(calcTime)} (Zona Waktu: ${currentTargetzone} UTC ${currentUtcOffset}) pada ${lastLocationName} adalah:`;
@@ -362,13 +389,5 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Error Detail Astronomy:", error);
             alert("Gagal melakukan perhitungan ephemeris: " + error.message);
         }
-    };
-
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        runCalculation();
     });
-
-    // Auto: hitung maghrib hari ini saat halaman dibuka & saat lokasi berubah
-    updateTimezone(defaultLat, defaultLng).then(runCalculation);
 });

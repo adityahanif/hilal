@@ -1,15 +1,19 @@
 :root {
-    --bg-color: #07060f;
-    --primary-color: #8b7cff;
-    --primary-deep: #5a4bdb;
-    --secondary-color: #f2b544;
-    --text-color: #f3f2fb;
-    --text-muted: #ffffff;
-    --card-bg: rgb(7 7 8 / 40%);
-    --border-color: rgb(255 255 255 / 9%);
+    /* Palet dilunakkan (2026-11-02): bukan lagi hitam pekat + putih murni +
+       kuning jenuh yang kontrasnya menusuk mata. Background diangkat sedikit,
+       teks diturunkan ke off-white hangat, emas dibuat champagne yang lebih
+       kalem, dan --text-muted sekarang benar-benar muted (sebelumnya #ffffff). */
+    --bg-color: #0e0d17;
+    --primary-color: #968bd8;
+    --primary-deep: #6558c4;
+    --secondary-color: #c9a86a;
+    --text-color: #e8e6df;
+    --text-muted: #a9a6b5;
+    --card-bg: rgb(19 18 29 / 45%);
+    --border-color: rgb(232 230 223 / 9%);
     --success: #34d399;
     --danger: #f87171;
-    --accent-grad: linear-gradient(135deg, #8b7cff 0%, #b388ff 50%, #f2b544 130%);
+    --accent-grad: linear-gradient(135deg, #968bd8 0%, #b3a6e8 50%, #c9a86a 130%);
 }
 
 * {
@@ -20,7 +24,7 @@
 }
 
 ::selection {
-    background: rgba(139, 124, 255, 0.4);
+    background: rgba(150, 139, 216, 0.4);
 }
 
 body {
@@ -42,7 +46,7 @@ body {
     width: 100vw;
     height: 100vh;
     z-index: -1;
-    background-color: #06050d;
+    background-color: #0c0b14;
     overflow: hidden;
 }
 
@@ -55,15 +59,15 @@ body {
     top: -50%;
     left: -50%;
     background-image:
-        radial-gradient(1.5px 1.5px at 20px 30px, #eee, rgba(0, 0, 0, 0)),
-        radial-gradient(1.5px 1.5px at 40px 70px, #fff, rgba(0, 0, 0, 0)),
-        radial-gradient(1.5px 1.5px at 50px 160px, #ddd, rgba(0, 0, 0, 0)),
-        radial-gradient(1.5px 1.5px at 90px 40px, #fff, rgba(0, 0, 0, 0)),
-        radial-gradient(1.5px 1.5px at 130px 80px, #fff, rgba(0, 0, 0, 0)),
-        radial-gradient(1.5px 1.5px at 160px 120px, #ddd, rgba(0, 0, 0, 0));
+        radial-gradient(1.5px 1.5px at 20px 30px, #d9d6cf, rgba(0, 0, 0, 0)),
+        radial-gradient(1.5px 1.5px at 40px 70px, #e8e6df, rgba(0, 0, 0, 0)),
+        radial-gradient(1.5px 1.5px at 50px 160px, #cfccc4, rgba(0, 0, 0, 0)),
+        radial-gradient(1.5px 1.5px at 90px 40px, #e8e6df, rgba(0, 0, 0, 0)),
+        radial-gradient(1.5px 1.5px at 130px 80px, #e8e6df, rgba(0, 0, 0, 0)),
+        radial-gradient(1.5px 1.5px at 160px 120px, #cfccc4, rgba(0, 0, 0, 0));
     background-repeat: repeat;
     background-size: 200px 200px;
-    opacity: 0.25;
+    opacity: 0.18;
     animation: star-drift 120s linear infinite;
 }
 
@@ -75,7 +79,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: radial-gradient(circle at 50% 50%, rgba(139, 124, 255, 0.04) 0%, transparent 70%);
+    background: radial-gradient(circle at 50% 50%, rgba(150, 139, 216, 0.04) 0%, transparent 70%);
     animation: pulse 12s ease-in-out infinite alternate;
 }
 
@@ -120,14 +124,14 @@ body {
     font-weight: 700;
     margin-bottom: 0.4rem;
     letter-spacing: -1.5px;
-    background: linear-gradient(120deg, #ffffff 30%, #c9c2ff 70%, #f2d9a8 100%);
+    background: linear-gradient(120deg, #ece9e2 30%, #bdb4e6 70%, #e3cb9c 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
 .highlight {
-    background: linear-gradient(120deg, var(--secondary-color), #ffd98a);
+    background: linear-gradient(120deg, var(--secondary-color), #e3c88f);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -146,9 +150,9 @@ body {
     font-weight: 500;
     margin-top: 0.9rem;
     padding: 0.4rem 1.1rem;
-    border: 1px solid rgba(242, 181, 68, 0.25);
+    border: 1px solid rgba(201, 168, 106, 0.28);
     border-radius: 999px;
-    background: rgba(242, 181, 68, 0.08);
+    background: rgba(201, 168, 106, 0.07);
     letter-spacing: 0.5px;
 }
 
@@ -186,7 +190,7 @@ body {
     text-align: center;
     text-transform: uppercase;
     letter-spacing: 2.5px;
-    color: var(--text-muted);
+    color: var(--text-color);
 }
 
 .card h2::before,
@@ -195,11 +199,11 @@ body {
     height: 1px;
     width: 2.2rem;
     flex: none;
-    background: linear-gradient(90deg, transparent, white);
+    background: linear-gradient(90deg, transparent, rgba(232, 230, 223, 0.55));
 }
 
 .card h2::after {
-    background: linear-gradient(90deg, white, transparent);
+    background: linear-gradient(90deg, rgba(232, 230, 223, 0.55), transparent);
 }
 
 .hijri-text {
@@ -241,7 +245,7 @@ input:hover {
 }
 
 #date-input {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23d8d5cc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 1rem center;
     background-size: 1.2rem;
@@ -265,8 +269,8 @@ input::-webkit-calendar-picker-indicator {
 input:focus {
     outline: none;
     border-color: var(--primary-color);
-    background: rgba(139, 124, 255, 0.05);
-    box-shadow: 0 0 0 3px rgba(139, 124, 255, 0.22);
+    background: rgba(150, 139, 216, 0.05);
+    box-shadow: 0 0 0 3px rgba(150, 139, 216, 0.2);
 }
 
 .coordinates-grid {
@@ -302,11 +306,15 @@ input:focus {
 #map .leaflet-container {
     height: 100%;
     width: 100%;
-    background: #aad3df;
+    background: #8fa8b3;
 }
 
 #map img.leaflet-tile {
     max-width: none !important;
+    /* Tiles Esri terang adalah blok paling mencolok di halaman gelap ini.
+       Redupkan + desaturasi sedikit supaya menyatu; hanya tile yang kena
+       filter, marker dan kontrol peta tidak ikut. */
+    filter: brightness(0.84) saturate(0.72) contrast(0.97);
 }
 
 /* Custom Cursors with Outlines for Map Dragging */
@@ -321,7 +329,7 @@ input:focus {
 /* Geocoder Styling (Search Box) */
 .leaflet-control-geocoder {
     border-radius: 8px !important;
-    background: white !important;
+    background: #e9e7df !important;
     border: 1px solid var(--border-color) !important;
 }
 
@@ -340,8 +348,8 @@ input:focus {
     padding: 0.85rem;
     border-radius: 14px;
     border: none;
-    background: #1b2171;
-    color: white;
+    background: #272c72;
+    color: #eceaf4;
     font-size: 1.05rem;
     font-weight: 600;
     letter-spacing: 0.4px;
@@ -393,7 +401,7 @@ input:focus {
 
 .result-item:hover {
     transform: translateY(-4px);
-    border-color: rgba(139, 124, 255, 0.35);
+    border-color: rgba(150, 139, 216, 0.35);
 }
 
 .result-item .icon {
@@ -405,8 +413,8 @@ input:focus {
     font-size: 1.1rem;
     margin-bottom: 0.5rem;
     border-radius: 10px;
-    background: rgb(7 7 8 / 40%);
-    border: 1px solid rgb(255 255 255 / 9%);
+    background: rgb(19 18 29 / 45%);
+    border: 1px solid rgb(232 230 223 / 9%);
 }
 
 .result-item .label {

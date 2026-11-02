@@ -10,14 +10,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Use islamic-umalqura for a reliable Hijri calculation (standard Umm al-Qura)
-        const hijriFormatter = new Intl.DateTimeFormat('id-ID-u-ca-islamic-umalqura', {
+        // NOTE: jangan ambil nama bulan + era dari locale 'id-ID' — di sebagian
+        // browser Android datanya rusak: bulan Hijriah ke-5 tampil sebagai "Mei"
+        // (nama bulan Masehi) dan eranya jadi "SM", bukan "H". Ambil angka
+        // tanggal/bulan/tahun lewat locale 'en' yang stabil, lalu petakan
+        // nama bulan Hijriahnya sendiri.
+        const HIJRI_MONTHS_ID = ['Muharram', 'Safar', 'Rabiul Awal', 'Rabiul Akhir', 'Jumadil Awal', 'Jumadil Akhir', 'Rajab', "Sya'ban", 'Ramadan', 'Syawal', 'Zulkaidah', 'Zulhijah'];
+        const hijriParts = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', {
             day: 'numeric',
-            month: 'long',
+            month: 'numeric',
             year: 'numeric'
-        });
+        }).formatToParts(now);
+        const hijriPart = (type) => hijriParts.find((p) => p.type === type)?.value;
+        const hijriMonthName = HIJRI_MONTHS_ID[parseInt(hijriPart('month'), 10) - 1];
 
         const masehiDate = masehiFormatter.format(now);
-        const hijriDate = hijriFormatter.format(now);
+        const hijriDate = `${hijriPart('day')} ${hijriMonthName} ${hijriPart('year')} H`;
 
         const dateElement = document.getElementById('current-date-info');
         if (dateElement) {

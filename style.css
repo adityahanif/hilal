@@ -4,9 +4,9 @@
     --primary-deep: #5a4bdb;
     --secondary-color: #f2b544;
     --text-color: #f3f2fb;
-    --text-muted: #9d9ab8;
-    --card-bg: rgba(22, 20, 40, 0.55);
-    --border-color: rgba(255, 255, 255, 0.09);
+    --text-muted: #ffffff;
+    --card-bg: rgb(7 7 8 / 40%);
+    --border-color: rgb(255 255 255 / 9%);
     --success: #34d399;
     --danger: #f87171;
     --accent-grad: linear-gradient(135deg, #8b7cff 0%, #b388ff 50%, #f2b544 130%);
@@ -43,10 +43,6 @@ body {
     height: 100vh;
     z-index: -1;
     background-color: #06050d;
-    background-image:
-        radial-gradient(ellipse 60% 45% at 15% 20%, rgba(139, 124, 255, 0.14) 0%, transparent 60%),
-        radial-gradient(ellipse 55% 40% at 85% 75%, rgba(242, 181, 68, 0.07) 0%, transparent 60%),
-        radial-gradient(ellipse 70% 55% at 55% 50%, rgba(88, 60, 200, 0.08) 0%, transparent 65%);
     overflow: hidden;
 }
 
@@ -174,8 +170,7 @@ body {
     border: 1px solid var(--border-color);
     border-radius: 24px;
     padding: 1.5rem;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06);
     height: 100%;
 }
@@ -200,11 +195,11 @@ body {
     height: 1px;
     width: 2.2rem;
     flex: none;
-    background: linear-gradient(90deg, transparent, rgba(139, 124, 255, 0.55));
+    background: linear-gradient(90deg, transparent, white);
 }
 
 .card h2::after {
-    background: linear-gradient(90deg, rgba(139, 124, 255, 0.55), transparent);
+    background: linear-gradient(90deg, white, transparent);
 }
 
 .hijri-text {
@@ -345,7 +340,7 @@ input:focus {
     padding: 0.85rem;
     border-radius: 14px;
     border: none;
-    background: linear-gradient(135deg, #6d5dfc 0%, #8b5cf6 55%, #a855f7 100%);
+    background: #1b2171;
     color: white;
     font-size: 1.05rem;
     font-weight: 600;
@@ -410,8 +405,8 @@ input:focus {
     font-size: 1.1rem;
     margin-bottom: 0.5rem;
     border-radius: 10px;
-    background: rgba(139, 124, 255, 0.12);
-    border: 1px solid rgba(139, 124, 255, 0.2);
+    background: rgb(7 7 8 / 40%);
+    border: 1px solid rgb(255 255 255 / 9%);
 }
 
 .result-item .label {

@@ -51,25 +51,31 @@ document.addEventListener('DOMContentLoaded', () => {
         attributionControl: false
     }).setView([defaultLat, defaultLng], 5);
 
-    // Esri World Topo primary (same as Galura) + Esri Street fallback.
-    // NOTE: do NOT use tile.openstreetmap.org directly (osm.wiki/Blocked) or
-    // basemaps.cartocdn.com (now requires API key watermark).
-    const topoTiles = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+    // OpenStreetMap asli (tile.openstreetmap.org) sebagai basemap utama,
+    // sesuai keputusan Han 2026-11-02. Datanya gratis; server tile resminya
+    // gratis bersyarat (tile usage policy: atribusi wajib tampil — sudah
+    // dipasang di bawah — pemakaian wajar, tanpa bulk download).
+    // NOTE: jangan ganti ke basemaps.cartocdn.com (CARTO) — sejak akhir
+    // Agustus 2026 tile tanpa API key dikembalikan sebagai gambar watermark
+    // "API KEY REQUIRED" dengan status HTTP 200.
+    // Esri World Topo dipertahankan hanya sebagai fallback darurat bila
+    // server OSM gagal memuat tile (tileerror), supaya peta tidak kosong.
+    const osmTiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
+        maxZoom: 19
+    });
+    const esriFallback = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
         attribution: 'Tiles &copy; Esri',
         maxZoom: 19
     });
-    const streetFallback = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Tiles &copy; Esri',
-        maxZoom: 19
-    });
-    topoTiles.on('tileerror', () => {
-        console.warn("Topo tiles error, falling back to Street.");
-        if (!map.hasLayer(streetFallback)) {
-            map.removeLayer(topoTiles);
-            streetFallback.addTo(map);
+    osmTiles.on('tileerror', () => {
+        console.warn("OSM tiles error, falling back to Esri Topo.");
+        if (!map.hasLayer(esriFallback)) {
+            map.removeLayer(osmTiles);
+            esriFallback.addTo(map);
         }
     });
-    topoTiles.addTo(map);
+    osmTiles.addTo(map);
 
     // Leaflet needs correct container size after CSS loads / layout settles
     setTimeout(() => map.invalidateSize(), 200);

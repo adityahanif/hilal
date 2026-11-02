@@ -311,10 +311,10 @@ input:focus {
 
 #map img.leaflet-tile {
     max-width: none !important;
-    /* Tiles Esri terang adalah blok paling mencolok di halaman gelap ini.
+    /* Tile peta (OSM) terang adalah blok paling mencolok di halaman gelap ini.
        Redupkan + desaturasi sedikit supaya menyatu; hanya tile yang kena
        filter, marker dan kontrol peta tidak ikut. */
-    filter: brightness(0.84) saturate(0.72) contrast(0.97);
+    filter: brightness(0.93) saturate(0.72) contrast(0.97);
 }
 
 /* Custom Cursors with Outlines for Map Dragging */
